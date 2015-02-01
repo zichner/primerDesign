@@ -25,4 +25,4 @@ In the configuration file, you specify the location of the reference genome and 
 Executing primerDesign
 ----------------------
 
-`primerDesign CONFIG_FILE VARIANT_LIST RESULT_FILE`
+`pyhon primerDesign.py CONFIG_FILE VARIANT_LIST RESULT_FILE`
