@@ -10,8 +10,6 @@ import random
 from datetime import datetime
 
 
-FILE_VARIANTS = "exampleVar.txt"
-FILE_PARAMETERS = "primerDesign_25bp.cfg"
 FILE_CHRCHECKFIRST = ""
 PARAM_NUMBER_N = 100
 UNIQUE_PRIMERS = set("")
@@ -23,7 +21,6 @@ def main():
     config = ConfigParser.ConfigParser()
     config.optionxform = str
     config.read(sys.argv[1])
-    #config.set('PrimerDesign', 'max_dist_for_sequencing', '600')
     maxSeqDist = config.getint("PrimerDesign", "max_dist_for_sequencing")
     maxPriDist = config.getint("PrimerDesign", "max_pcr_product_size")
     global FILE_CHRCHECKFIRST
@@ -35,8 +32,6 @@ def main():
     varList = read_variant_list_from_file(sys.argv[2])
     varListTmp = varList
     primerList = [[-1, -1, -1, -1] for i in range(len(varList))]
-#    for paramSet in [(200, 25), (600,250), (2000,50), (6000,500)]:
-#    for paramSet in [(int(maxSeqDist/3), 25), (maxSeqDist,250), (int(maxPriDist/3),50), (maxPriDist,500)]:
     for paramSet in [(int(maxSeqDist/3), 25), (int(maxSeqDist/3), 100), (maxSeqDist,50), (maxSeqDist,200), (maxSeqDist,2000), (int(maxPriDist/3),50), (int(maxPriDist/3),200), (int(maxPriDist/3),1000), (maxPriDist,50), (maxPriDist,200), (maxPriDist,1000), (maxPriDist,5000)]:
         if len(varListTmp) == 0: break
         primerTargetSize, primerNum = paramSet
@@ -142,7 +137,6 @@ def determine_primer_pairs(varList, primerTargetSize, primerNum, config):
     sys.stderr.write("unique primers: "+str(len(UNIQUE_PRIMERS))+"\n")
     sys.stderr.write("non-unique primers: "+str(len(NON_UNIQUE_PRIMERS))+"\n")
     sys.stderr.write("forbidden primers: "+str(len(FORBIDDEN_PRIMERS))+"\n")
-#    sys.stderr.write(str(len(targetSequences))+str(len(primer3OutputTable)))
     iter = 0
     for primer3OutputSubTable in primer3OutputTable:
         for primerPair in primer3OutputSubTable:
@@ -151,8 +145,6 @@ def determine_primer_pairs(varList, primerTargetSize, primerNum, config):
             else:
                 primerPair.append(primerPair[2] in uniqPrimers)
                 primerPair.append(primerPair[3] in uniqPrimers)
-#            primerPair.append(primerTargetSize - int(primerPair[4].split(",")[0]) + minPrimerOffset)
-#            primerPair.append(int(primerPair[5].split(",")[0]) - primerTargetSize - PARAM_NUMBER_N + minPrimerOffset - 1)
             primerPair.append(len(targetSequences[iter][1]) - int(primerPair[4].split(",")[0]) + minPrimerOffset - 1)
             primerPair.append(int(primerPair[5].split(",")[0]) - len(targetSequences[iter][1]) - PARAM_NUMBER_N + minPrimerOffset)
         iter += 1
@@ -183,13 +175,11 @@ def select_primer_pairs(primerList, primerPairs, varList, maxDistForSequencing):
                 numSeqBp += 1
             if primerPair[11] < maxDistForSequencing:
                 numSeqBp += 1
-#            if (primerPair[8] or primerPair[9]) and (numSeqBp > numSeqBp1 or (numSeqBp == numSeqBp1 and float(primerPair[1]) < primerScore1)):
             if (primerPair[8] or primerPair[9]) and (numSeqBp > numSeqBp1):
                 primerList[int(primerPair[0])-1][2] = primerPair[:]
                 primerList[int(primerPair[0])-1][0] = numSeqBp
                 primerScore1 = float(primerPair[1])
                 numSeqBp1 = numSeqBp
-#            if (primerPair[8] and primerPair[9]) and (numSeqBp > numSeqBp2 or (numSeqBp == numSeqBp2 and float(primerPair[1]) < primerScore2)):
             if (primerPair[8] and primerPair[9]) and (numSeqBp > numSeqBp2):
                 primerList[int(primerPair[0])-1][3] = primerPair[:]
                 primerList[int(primerPair[0])-1][1] = numSeqBp
@@ -233,14 +223,12 @@ def createResultList(varList, primerList, maxDistForSequencing, primerSetId=0):
             elif resultList[i][4] == "trans5to5":
                 resultList[i].extend([resultList[i][1]+resultList[i][13], resultList[i][3]+resultList[i][14], resultList[i][13]+resultList[i][14], naString])
             elif resultList[i][4] == "invRefA":
-                #resultList[i][3] = resultList[i+1][3]
                 if resultList[i+1][13] == naString:
                     resultList[i] = varList[i][1:]
                     resultList[i].extend([naString]*13)
                 else:
                     resultList[i].extend([resultList[i][1]-resultList[i][13], resultList[i][1]+resultList[i][14], resultList[i][13]+resultList[i][14], resultList[i][13]+resultList[i+1][13]])
             elif resultList[i][4] == "invRefB":
-                #resultList[i][1] = resultList[i-1][1]
                 if resultList[i-1][13] == naString:
                     resultList[i] = varList[i][1:]
                     resultList[i].extend([naString]*13)
@@ -260,10 +248,6 @@ def createResultList(varList, primerList, maxDistForSequencing, primerSetId=0):
                     resultList[i].extend([resultList[i][1]+resultList[i][13], resultList[i][3]+resultList[i][14], resultList[i][13]+resultList[i][14], resultList[i-1][14]+resultList[i][14]])
 
     for i in range(len(varList)):
-#        if resultList[i][4] == "invRefA":
-#           resultList[i][3] = resultList[i+1][3]
-#        if resultList[i][4] == "invRefB":
-#            resultList[i][1] = resultList[i-1][1]
         row = resultList[i][0:9]
         row.extend(resultList[i][11:13])
         row.extend(resultList[i][9:11])
@@ -291,7 +275,7 @@ def generate_primer3_input(targetSequences, primerNum, maxPrimerDist, primer3Par
         primer3Input += "PRIMER_PICK_INTERNAL_OLIGO=0\n"
         primer3Input += "PRIMER_PICK_RIGHT_PRIMER=1\n"
         primer3Input += "PRIMER_MAX_NS_ACCEPTED=1\n"
-        primer3Input += "PRIMER_NUM_RETURN="+ str(primerNum) + "\n" #1000?
+        primer3Input += "PRIMER_NUM_RETURN="+ str(primerNum) + "\n"
         primer3Input += "PRIMER_EXPLAIN_FLAG=1\n"
         for param in primer3Parameters:
             primer3Input += param[0] + "=" + param[1] + "\n"
@@ -354,7 +338,6 @@ def run_blast(sequences, eValue, blast, genomeFile, numThreads, wordSize, seqidL
         iter += 1
         blastInput += ">" + primerSeq + "\n"
         blastInput += primerSeq + "\n"
-#    p1 = subprocess.Popen([blast, "-task", "blastn", "-db", genomeFile, "-evalue", str(eValue), "-num_threads", "8", "-outfmt", "6 std gaps", "-dust", "no", "-gapopen", "4", "-gapextend", "2", "-penalty", "-2", "-reward", "2", "-word_size", "11", "-max_target_seqs", "500", "-num_alignments", "500", "-num_descriptions", "500"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     if seqidListFile == "":
         p1 = subprocess.Popen([blast, "-task", "blastn", "-db", genomeFile, "-evalue", str(eValue), "-num_threads", numThreads, "-outfmt", "6 std gaps nident", "-dust", "no", "-gapopen", "4", "-gapextend", "2", "-penalty", "-2", "-reward", "2", "-word_size", wordSize, "-max_target_seqs", "500"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     else:
@@ -379,12 +362,9 @@ def determine_nonunique_sequences_from_blastoutput(blastOutput, minMismatches, m
         g = int(g)
         h = int(h)
         length = len(seq)
-        #if seq != skipSeq and ((f>=length-3 and (a*b)/100>=length-8) or (f<length-3 and (a*b)/100>=length-5)):
-#        if seq != skipSeq and ((f>=length-2 and (a*b)/100>length-4+g) or (f<length-2 and (a*b)/100>length-2+g)):
         if seq != skipSeq and ((h>length-minMismatchesClose3p) or (f<=length-minDist3p and h>length-minMismatches)):
             if seq==prevSeq:
                 nonUniqueSequences.append(seq)
-#                if a==100 and b==length and c==0 and d==0 and e==1 and f==length: completelyNonUniqueSequences.append(seq)
                 if h>length-maxMismatchesToBeForbidden: completelyNonUniqueSequences.append(seq)
                 skipSeq = seq
             else:
@@ -400,8 +380,7 @@ def determine_unique_primers(primerList, blast, genomeFile, minMismatches, minMi
     global FORBIDDEN_PRIMERS
     potUniquePrimers = primerList - NON_UNIQUE_PRIMERS - UNIQUE_PRIMERS - FORBIDDEN_PRIMERS
     for seqidListFile in [FILE_CHRCHECKFIRST, ""]:
-#        for eValue in [0.01, 0.1, 1, 2, 5, 10, 20, 50, 100]: #, 1000]?
-        for eValue in [0.01, 0.1, 1, 10, 100]: #, 1000]?
+        for eValue in [0.01, 0.1, 1, 10, 100]:
             if (seqidListFile == "" and eValue < 5):
                 continue
             blastOutput = run_blast(potUniquePrimers, eValue, blast, genomeFile, numThreads, wordSize, seqidListFile)
@@ -421,7 +400,6 @@ def get_DNA_sequence(chr, start, end, samtools, genomeFile):
     p2 = subprocess.Popen(["grep", "-v", ">"], stdin=p1.stdout, stdout=subprocess.PIPE)
     p3 = subprocess.Popen(["tr", "-d", "'\n'"], stdin=p2.stdout, stdout=subprocess.PIPE)
     sequence = p3.communicate()[0]
-    #sequence = subprocess.call([PROG_SAMTOOLS, "faidx", FILE_GENOME, chrRegionString])
     return sequence
 
 
