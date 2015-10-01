@@ -3,6 +3,8 @@ primerDesign
 
 A tool to design highly specific PCR primers for the validation of genomic alterations, including structural variants. Supported variant types are: SNVs/SNPs, deletions, tandem duplications, inversion, and translocations.
 
+The tool was applied in the 1000 genomes project paper "An integrated map of structural variation in 2,504 human genomes" by Sudmant et al. (Sep 2015; http://dx.doi.org/10.1038/nature15394).
+
 
 Prerequisites
 -------------
