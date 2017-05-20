@@ -12,13 +12,12 @@ Prerequisites
 To run primerDesign, you need the following software/tools:
 * Primer3 (http://sourceforge.net/projects/primer3/files/primer3)
 * NCBI BLAST+ (ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST)
-* Samtools (http://samtools.sourceforge.net)
 * Python 2.7 with packages:
   * xlrd (https://pypi.python.org/pypi/xlrd)
   * xlwt (https://pypi.python.org/pypi/xlwt)
 
 
-Furthermore, you need to generate a BLAST database for your reference genome, e.g.:   
+Furthermore, you need to generate a BLAST database for your reference genome, e.g.:
 `makeblastdb -in REF_GENOME.fa -dbtype nucl -parse_seqids`
 
 
@@ -30,7 +29,7 @@ Input
 
 #### Configuration file
 
-In the configuration file, you specify the location of the reference genome, of the Primer3 paramter files, and of the executables primer3_core, as blastn, as well as samtools. Furthermore, you can define the paraemters used for the primer design.
+In the configuration file, you specify the location of the reference genome, of the Primer3 paramter files, and of the executables primer3_core, as blastn, as well as blastdbcmd. Furthermore, you can define the paraemters used for the primer design.
 
 
 #### List of genomic variants

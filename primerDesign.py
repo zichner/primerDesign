@@ -129,7 +129,7 @@ def determine_primer_pairs(varList, primerTargetSize, primerNum, config):
     targetSequences = []
     sys.stderr.write("Number of variants left: "+str(len(varList))+"\n")
     for variant in varList:
-        primerTargetSeqFwd, primerTargetSeqRev = get_primer_target_sequence(*variant, primerTargetSize=primerTargetSize, primerOffset=minPrimerOffset, samtools=config.get("Programs","samtools"), genomeFile=config.get("General","reference_genome"))
+        primerTargetSeqFwd, primerTargetSeqRev = get_primer_target_sequence(*variant, primerTargetSize=primerTargetSize, primerOffset=minPrimerOffset, blastdbcmd=config.get("Programs","blastdbcmd"), genomeFile=config.get("General","reference_genome"))
         targetSequences.append([variant[0], primerTargetSeqFwd,  primerTargetSeqRev])
     primer3Input = generate_primer3_input(targetSequences, primerNum, config.getint("PrimerDesign","max_pcr_product_size")-(2*config.getint("PrimerDesign","min_primer_offset")), config.items("Primer3"))
     primer3Output, primer3OutputTable, primerSeqList = call_primer3(primer3Input, config.get("Programs","primer3"), config.getfloat("PrimerDesign","primer_qual_cutoff"))
@@ -393,60 +393,54 @@ def determine_unique_primers(primerList, blast, genomeFile, minMismatches, minMi
     return (potUniquePrimers | UNIQUE_PRIMERS)
 
 
-def get_DNA_sequence(chr, start, end, samtools, genomeFile):
+def get_DNA_sequence(chr, start, end, blastdbcmd, genomeFile):
     """Get the DNA sequence of a given genomic region."""
-    chrRegionString = create_chr_region_str(chr, start, end)
-    p1 = subprocess.Popen([samtools, "faidx", genomeFile, chrRegionString], stdout=subprocess.PIPE)
+    p1 = subprocess.Popen([blastdbcmd, "-db", genomeFile, "-entry", chr, "-range", str(start) + "-" + str(end)], stdout=subprocess.PIPE)
     p2 = subprocess.Popen(["grep", "-v", ">"], stdin=p1.stdout, stdout=subprocess.PIPE)
     p3 = subprocess.Popen(["tr", "-d", "'\n'"], stdin=p2.stdout, stdout=subprocess.PIPE)
     sequence = p3.communicate()[0]
     return sequence
 
 
-def create_chr_region_str(chr, start, end):
-    """Create chromosomal region string"""
-    return chr + ":" + str(start) + "-" + str(end)
-    
-
-def get_primer_target_sequence(id, svStartChr, svStartPos, svEndChr, svEndPos, svType, svComment, primerTargetSize, primerOffset, samtools, genomeFile):
+def get_primer_target_sequence(id, svStartChr, svStartPos, svEndChr, svEndPos, svType, svComment, primerTargetSize, primerOffset, blastdbcmd, genomeFile):
     """Get the sequences in which primers will be placed"""
     if svType in ["del", "inv3to3", "trans3to3", "trans3to5", "snv", "invRefA", "invAltA"]:
         targetSeq1Start = svStartPos - primerOffset - primerTargetSize
         targetSeq1End = svStartPos - primerOffset
-        targetSeq1 = get_DNA_sequence(svStartChr, targetSeq1Start, targetSeq1End, samtools, genomeFile).upper()
+        targetSeq1 = get_DNA_sequence(svStartChr, targetSeq1Start, targetSeq1End, blastdbcmd, genomeFile).upper()
     elif svType in ["invRefB"]:
         targetSeq1Start = max(svEndPos - primerOffset - primerTargetSize, svStartPos + primerOffset)
         targetSeq1End = svEndPos - primerOffset
-        targetSeq1 = get_DNA_sequence(svStartChr, targetSeq1Start, targetSeq1End, samtools, genomeFile).upper()
+        targetSeq1 = get_DNA_sequence(svStartChr, targetSeq1Start, targetSeq1End, blastdbcmd, genomeFile).upper()
     elif svType in ["trans5to3", "trans5to5"]:
         targetSeq1Start = svStartPos + primerOffset
         targetSeq1End = svStartPos + primerOffset + primerTargetSize
-        targetSeq1 = reverseComplementSequence(get_DNA_sequence(svStartChr, targetSeq1Start, targetSeq1End, samtools, genomeFile).upper())
+        targetSeq1 = reverseComplementSequence(get_DNA_sequence(svStartChr, targetSeq1Start, targetSeq1End, blastdbcmd, genomeFile).upper())
     elif svType in ["dup", "inv5to5", "invAltB"]:
         targetSeq1Start = svStartPos + primerOffset
         targetSeq1End = min(svStartPos + primerOffset + primerTargetSize, svEndPos - primerOffset)
-        targetSeq1 = reverseComplementSequence(get_DNA_sequence(svStartChr, targetSeq1Start, targetSeq1End, samtools, genomeFile).upper())
+        targetSeq1 = reverseComplementSequence(get_DNA_sequence(svStartChr, targetSeq1Start, targetSeq1End, blastdbcmd, genomeFile).upper())
 
     if svType in ["del", "inv5to5", "snv", "invRefB", "invAltB"]:
         targetSeq2Start = svEndPos + primerOffset
         targetSeq2End = svEndPos + primerOffset + primerTargetSize
-        targetSeq2 = get_DNA_sequence(svStartChr, targetSeq2Start, targetSeq2End, samtools, genomeFile).upper()
+        targetSeq2 = get_DNA_sequence(svStartChr, targetSeq2Start, targetSeq2End, blastdbcmd, genomeFile).upper()
     elif svType in ["invRefA"]:
         targetSeq2Start = svStartPos + primerOffset
         targetSeq2End = min(svStartPos + primerOffset + primerTargetSize, svEndPos - primerOffset)
-        targetSeq2 = get_DNA_sequence(svStartChr, targetSeq2Start, targetSeq2End, samtools, genomeFile).upper()
+        targetSeq2 = get_DNA_sequence(svStartChr, targetSeq2Start, targetSeq2End, blastdbcmd, genomeFile).upper()
     elif svType in ["dup", "inv3to3", "invAltA"]:
         targetSeq2Start = max(svEndPos - primerTargetSize - primerOffset, svStartPos + primerOffset)
         targetSeq2End = svEndPos - primerOffset
-        targetSeq2 = reverseComplementSequence(get_DNA_sequence(svStartChr, targetSeq2Start, targetSeq2End, samtools, genomeFile).upper())
+        targetSeq2 = reverseComplementSequence(get_DNA_sequence(svStartChr, targetSeq2Start, targetSeq2End, blastdbcmd, genomeFile).upper())
     elif svType in ["trans3to5", "trans5to5"]:
         targetSeq2Start = svEndPos + primerOffset
         targetSeq2End = svEndPos + primerOffset + primerTargetSize
-        targetSeq2 = get_DNA_sequence(svEndChr, targetSeq2Start, targetSeq2End, samtools, genomeFile).upper()
+        targetSeq2 = get_DNA_sequence(svEndChr, targetSeq2Start, targetSeq2End, blastdbcmd, genomeFile).upper()
     elif svType in ["trans3to3", "trans5to3"]:
         targetSeq2Start = svEndPos - primerTargetSize - primerOffset
         targetSeq2End = svEndPos - primerOffset
-        targetSeq2 = reverseComplementSequence(get_DNA_sequence(svEndChr, targetSeq2Start, targetSeq2End, samtools, genomeFile).upper())
+        targetSeq2 = reverseComplementSequence(get_DNA_sequence(svEndChr, targetSeq2Start, targetSeq2End, blastdbcmd, genomeFile).upper())
     return (targetSeq1, targetSeq2)
 
 
