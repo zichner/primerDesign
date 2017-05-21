@@ -6,20 +6,20 @@ A tool to design highly specific PCR primers for the validation of genomic alter
 The tool was applied in the 1000 genomes project paper "An integrated map of structural variation in 2,504 human genomes" by Sudmant et al. (Sep 2015; http://dx.doi.org/10.1038/nature15394).
 
 
-Prerequisites
--------------
+Installation
+------------
 
-To run primerDesign, you need the following software/tools:
+primerDesign is available as a Docker container, including all software dependencies as well as a BLAST database for the human reference genome (version hs37d5 provided by the 1000 genomes project).
+
+Alternatively, you can run primerDesign without Docker. In this case you need the following software/tools:
 * Primer3 (http://sourceforge.net/projects/primer3/files/primer3)
 * NCBI BLAST+ (ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST)
 * Python 2.7 with packages:
   * xlrd (https://pypi.python.org/pypi/xlrd)
   * xlwt (https://pypi.python.org/pypi/xlwt)
 
-
-Furthermore, you need to generate a BLAST database for your reference genome, e.g.:
+Furthermore, you need to generate a BLAST database for your reference genome, e.g.:  
 `makeblastdb -in REF_GENOME.fa -dbtype nucl -parse_seqids`
-
 
 NB: primerDesign has only been tested on Linux systems.
 
@@ -29,7 +29,8 @@ Input
 
 #### Configuration file
 
-In the configuration file, you specify the location of the reference genome, of the Primer3 paramter files, and of the executables primer3_core, as blastn, as well as blastdbcmd. Furthermore, you can define the paraemters used for the primer design.
+In the configuration file, you specify the location of the reference genome, of the Primer3 paramter files, and of the executables primer3_core, as blastn, as well as blastdbcmd. Furthermore, you can define the paraemters used for the primer design.  
+(The four example configuration files are prepared for the use with the primerDesign Docker container.)
 
 
 #### List of genomic variants
@@ -52,6 +53,20 @@ Variant type can be one of the following
 
 Running primerDesign
 ----------------------
+
+#### Docker version
+
+Download the Docker container (needs to be done only once):  
+`docker pull zichner/primer-design`
+
+Execute primerDesign:  
+`docker run -v /PATH/TO/DATA/FOLDER:/data/ zichner/primer-design CONFIG_FILE VARIANT_LIST [RESULT_FILE]`
+
+`CONFIG_FILE` and `VARIANT_LIST` need to be located in `/PATH/TO/DATA/FOLDER`. The `RESULT_FILE` will be stored there as well.  
+If you have your own BLAST database you can make it accessible for Docker by adding `-v /PATH/TO/BLASTDB:/blastDb/` to the Docker run command. Furthermore, you need to adjust the BLAST DB path in the configuration file to `/blastDB/BLAST_DB_NAME`.
+
+
+#### Python script
 
 `pyhon primerDesign.py CONFIG_FILE VARIANT_LIST [RESULT_FILE]`
 
