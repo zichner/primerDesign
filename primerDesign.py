@@ -339,9 +339,9 @@ def run_blast(sequences, eValue, blast, genomeFile, numThreads, wordSize, seqidL
         blastInput += ">" + primerSeq + "\n"
         blastInput += primerSeq + "\n"
     if seqidListFile == "":
-        p1 = subprocess.Popen([blast, "-task", "blastn", "-db", genomeFile, "-evalue", str(eValue), "-num_threads", numThreads, "-outfmt", "6 std gaps nident", "-dust", "no", "-gapopen", "4", "-gapextend", "2", "-penalty", "-2", "-reward", "2", "-word_size", wordSize, "-max_target_seqs", "500"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        p1 = subprocess.Popen([blast, "-task", "blastn", "-db", genomeFile, "-evalue", str(eValue), "-num_threads", numThreads, "-outfmt", "6 std gaps nident", "-dust", "no", "-gapopen", "4", "-gapextend", "2", "-penalty", "-2", "-reward", "2", "-word_size", wordSize, "-max_target_seqs", "500"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     else:
-        p1 = subprocess.Popen([blast, "-task", "blastn", "-db", genomeFile, "-seqidlist", seqidListFile, "-evalue", str(eValue), "-num_threads", numThreads, "-outfmt", "6 std gaps nident", "-dust", "no", "-gapopen", "4", "-gapextend", "2", "-penalty", "-2", "-reward", "2", "-word_size", wordSize, "-max_target_seqs", "2"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        p1 = subprocess.Popen([blast, "-task", "blastn", "-db", genomeFile, "-seqidlist", seqidListFile, "-evalue", str(eValue), "-num_threads", numThreads, "-outfmt", "6 std gaps nident", "-dust", "no", "-gapopen", "4", "-gapextend", "2", "-penalty", "-2", "-reward", "2", "-word_size", wordSize, "-max_target_seqs", "2"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     return p1.communicate(input=blastInput)[0]
 
 
